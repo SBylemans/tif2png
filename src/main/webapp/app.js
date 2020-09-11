@@ -80,7 +80,7 @@ function _createImageLayer(options, zIndex, imageName) {
   return new ImageLayer({
     visible: true,
     source: new Static({
-      url: '/' + imageName,
+      url: '/geotiff/' + imageName,
       imageExtent: options.extent,
     }),
     zIndex: zIndex,

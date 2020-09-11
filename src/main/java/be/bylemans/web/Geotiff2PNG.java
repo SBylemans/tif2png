@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 @Controller
 @RequestMapping("/geotiff")
 public class Geotiff2PNG {
 
   @GetMapping(value = "/{imageName}")
+  @ResponseBody
   @Produces(MediaType.IMAGE_PNG_VALUE)
   public void getImageWithName(@PathVariable String imageName, HttpServletResponse response)
       throws IOException {
