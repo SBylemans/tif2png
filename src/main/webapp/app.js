@@ -31,27 +31,39 @@ var view = new View({
 var parser = new WMTSCapabilities();
 var wmtsUrl = "http://tile.informatievlaanderen.be/ws/raadpleegdiensten/wmts";
 
+var images = ["test", "test2"]
+var headers = {
+  'Accept': 'application/json',       // receive json
+  'Content-Type': 'application/json'  // send json
+};
+
 var wmtsCapabilities;
 Promise.all(
-    [fetch(wmtsUrl + "?request=getcapabilities&service=wmts&version=1.0.0"),
-      fetch("/test/metadata")]).then(([response, metadata]) => {
+    [fetch(wmtsUrl
+        + "?request=getcapabilities&service=wmts&version=1.0.0")].concat(
+        images.map(imageName => fetch("/geotiff/" + imageName + "/metadata", {headers: headers})))).then(
+    response => {
+      Promise.all([response[0].text()].concat(
+          response.slice(1).map(jsonResponse => jsonResponse.json()))).then(textAndJson => {
+            var text = textAndJson[0];
+            var json = textAndJson.slice(1);
+        wmtsCapabilities = parser.read(text);
 
-  Promise.all([response.text(), metadata.json()]).then(([text, json]) => {
-    wmtsCapabilities = parser.read(text);
+        var layer1 = _createTileLayer(
+            _loadWMTSOptions(wmtsCapabilities, "grb_bsk_grijs", "BPL72VL"),
+            0);
 
-    var layer1 = _createTileLayer(
-        _loadWMTSOptions(wmtsCapabilities, "grb_bsk_grijs", "BPL72VL"),
-        0);
+        var layers = [layer1].concat(json.map((j,i) => {
+          _createImageLayer(json, 1, images[i])
+        }))
 
-    var layer2 = _createImageLayer(json, 1)
-
-    var map = new Map({
-      layers: [layer1, layer2],
-      target: 'map',
-      view: view
-    });
-  })
-})
+        var map = new Map({
+          layers: layers,
+          target: 'map',
+          view: view
+        });
+      })
+    })
 
 function _createTileLayer(options, zIndex) {
   options.crossOrigin = 'anonymous';
@@ -62,11 +74,11 @@ function _createTileLayer(options, zIndex) {
   });
 }
 
-function _createImageLayer(options, zIndex) {
+function _createImageLayer(options, zIndex, imageName) {
   return new ImageLayer({
     visible: true,
     source: new Static({
-      url: '/test',
+      url: '/' + imageName,
       imageExtent: options.extent,
     }),
     zIndex: zIndex,

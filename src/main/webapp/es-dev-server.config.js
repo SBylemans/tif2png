@@ -15,7 +15,7 @@ module.exports = {
     cjsTransformer()
   ],
   middlewares: [
-    proxy('/test', {
+    proxy('/geotiff/**', {
       target: 'http://localhost:8080',
     }),
     proxy('/admin/**', {
