@@ -41,28 +41,30 @@ var wmtsCapabilities;
 Promise.all(
     [fetch(wmtsUrl
         + "?request=getcapabilities&service=wmts&version=1.0.0")].concat(
-        images.map(imageName => fetch("/geotiff/" + imageName + "/metadata", {headers: headers})))).then(
+        images.map(imageName => fetch("/geotiff/" + imageName + "/metadata",
+            {headers: headers})))).then(
     response => {
       Promise.all([response[0].text()].concat(
-          response.slice(1).map(jsonResponse => jsonResponse.json()))).then(textAndJson => {
+          response.slice(1).map(jsonResponse => jsonResponse.json()))).then(
+          textAndJson => {
             var text = textAndJson[0];
             var json = textAndJson.slice(1);
-        wmtsCapabilities = parser.read(text);
+            wmtsCapabilities = parser.read(text);
 
-        var layer1 = _createTileLayer(
-            _loadWMTSOptions(wmtsCapabilities, "grb_bsk_grijs", "BPL72VL"),
-            0);
+            var layer1 = _createTileLayer(
+                _loadWMTSOptions(wmtsCapabilities, "grb_bsk_grijs", "BPL72VL"),
+                0);
 
-        var layers = [layer1].concat(json.map((j,i) => {
-          _createImageLayer(json, 1, images[i])
-        }))
+            var layers = [layer1].concat(json.map((j, i) =>
+                _createImageLayer(j, i+1, images[i])
+            ))
 
-        var map = new Map({
-          layers: layers,
-          target: 'map',
-          view: view
-        });
-      })
+            var map = new Map({
+              layers: layers,
+              target: 'map',
+              view: view
+            });
+          })
     })
 
 function _createTileLayer(options, zIndex) {
