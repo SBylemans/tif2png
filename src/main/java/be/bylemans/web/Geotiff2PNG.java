@@ -1,6 +1,8 @@
 package be.bylemans.web;
 
-import java.awt.image.RenderedImage;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,6 +27,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/geotiff")
 public class Geotiff2PNG {
 
+  private static final Color backColor = new Color(255, 255, 255);
+  private static final int THRESHOLD = 35;
+  private static final int TRANSPARENT = 0;  // 0x00000000;
+
   @GetMapping(value = "/{imageName}")
   @ResponseBody
   @Produces(MediaType.IMAGE_PNG_VALUE)
@@ -33,7 +39,7 @@ public class Geotiff2PNG {
     try (InputStream in = getClass().getResourceAsStream(
         "/images/" + imageName + ".tif"); ServletOutputStream outputStream = response
         .getOutputStream()) {
-      convertToPng(in, outputStream);
+      convertToWhiteTransparentPng(in, outputStream);
     }
   }
 
@@ -49,12 +55,43 @@ public class Geotiff2PNG {
     return stringObjectMap;
   }
 
-  static void convertToPng(InputStream inputStream, OutputStream outputStream) throws IOException {
-    GeoTiffReader reader = new GeoTiffReader(inputStream,
-        new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE));
-    GridCoverage2D coverage = reader.read(null);
-    RenderedImage image = coverage.getRenderedImage();
-    ImageIO.write(image, "PNG", outputStream);
+  void convertToWhiteTransparentPng(InputStream inputStream, OutputStream outputStream) throws IOException {
+//    Alternative method (not working for all tif's)
+//    GeoTiffReader reader = new GeoTiffReader(inputStream);
+//    ParameterValue<Color> input = AbstractGridFormat.INPUT_TRANSPARENT_COLOR.createValue();
+//    input.setValue(Color.white);
+//    GridCoverage2D coverage = reader.read(new GeneralParameterValue[]{input});
+
+    BufferedImage image = ImageIO.read(inputStream);
+
+    // Buffered image met alpha channel
+    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(),
+        BufferedImage.TYPE_4BYTE_ABGR);
+
+    int height = image.getHeight();
+    int width = image.getWidth();
+
+    Graphics g = image.getGraphics();
+    g.drawImage(image, 0, 0, null);
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        int pixel = image.getRGB(x, y);
+        Color color = new Color(pixel);
+
+        int dr = Math.abs(color.getRed() - backColor.getRed()),
+            dg = Math.abs(color.getGreen() - backColor.getGreen()),
+            db = Math.abs(color.getBlue() - backColor.getBlue());
+
+        if (dr < THRESHOLD && dg < THRESHOLD && db < THRESHOLD) {
+          newImage.setRGB(x, y, TRANSPARENT);
+        } else {
+          newImage.setRGB(x, y, pixel);
+        }
+      }
+    }
+
+    ImageIO.write(newImage, "PNG", outputStream);
   }
 
   static Map<String, Object> imageMetadata(InputStream inputStream) throws IOException {
@@ -71,7 +108,7 @@ public class Geotiff2PNG {
     double maxX = env.getUpperCorner().getOrdinate(0);
     double maxY = env.getUpperCorner().getOrdinate(1);
     result.put("extent", new double[]{minX, minY, maxX, maxY});
+
     return result;
   }
-
 }

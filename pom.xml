@@ -23,6 +23,11 @@
         <artifactId>gt-epsg-hsql</artifactId>
         <version>${gt.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-main</artifactId>
+        <version>${gt.version}</version>
+      </dependency>
 <!--    <dependency>-->
 <!--      <groupId>org.springframework.boot</groupId>-->
 <!--      <artifactId>spring-boot-starter</artifactId>-->
@@ -32,6 +37,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
       <version>${spring.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-render</artifactId>
+      <version>22.0</version>
     </dependency>
   </dependencies>
   <build>

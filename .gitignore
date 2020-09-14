@@ -2,3 +2,4 @@
 src/main/webapp/node_modules/*
 src/main/webapp/build/*
 target/*
+.DS_Store

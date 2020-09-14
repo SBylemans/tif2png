@@ -31,7 +31,7 @@ var view = new View({
 var parser = new WMTSCapabilities();
 var wmtsUrl = "http://tile.informatievlaanderen.be/ws/raadpleegdiensten/wmts";
 
-var images = ["test", "test2"]
+var images = ["test", "test2", "wilsele_noord", "kriekenbos"]
 var headers = {
   'Accept': 'application/json',       // receive json
   'Content-Type': 'application/json'  // send json
