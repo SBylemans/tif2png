@@ -1,5 +1,6 @@
 .idea
 src/main/webapp/node_modules/*
 src/main/webapp/build/*
+src/main/resources/images/*
 target/*
 .DS_Store

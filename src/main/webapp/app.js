@@ -19,6 +19,8 @@ proj4.defs(BELGIAN_LAMBERT_72_PROJECTION, PROJ4_DEFINITION);
 
 olProj4.register(proj4);
 
+var layers = [];
+
 var view = new View({
   center: [140860.69299028325, 190532.7165957574],
   extent: [9928.000000, 66928.000000, 272072.000000, 329072.000000],
@@ -31,17 +33,46 @@ var view = new View({
 var parser = new WMTSCapabilities();
 var wmtsUrl = "http://tile.informatievlaanderen.be/ws/raadpleegdiensten/wmts";
 
-var images = ["test", "test2", "wilsele_noord", "kriekenbos"]
+var images = [
+  "test",
+  "test2",
+  "wilsele_noord",
+  "kriekenbos",
+  "l18_mechelsevest",
+  "mechelsevest",
+  "putkapel",
+  "st-jacobswijk",
+  "stationsoverkapping", "geertrui",
+  "h9_kriekenbos",
+  "koningin_astridlaan",
+  "kauter"]
 var headers = {
   'Accept': 'application/json',       // receive json
   'Content-Type': 'application/json'  // send json
 };
 
+var map;
+
 var wmtsCapabilities;
+
+function areaCompareExtent(a, b) {
+  let xLengthA = a[2] - a[0];
+  let yLengthA = a[3] - a[1];
+  let xLengthB = b[2] - b[0];
+  let yLengthB = b[3] - b[1];
+  if ((xLengthA * yLengthA) > (xLengthB * yLengthB)) {
+    return -1;
+  }
+  if ((xLengthA * yLengthA) < (xLengthB * yLengthB)) {
+    return 1;
+  }
+  return 0;
+}
+
 Promise.all(
     [fetch(wmtsUrl
         + "?request=getcapabilities&service=wmts&version=1.0.0")].concat(
-        images.map(imageName => fetch("/geotiff/" + imageName + "/metadata",
+        images.map(imageName => fetch("/geotiff/" + encodeURI(imageName) + "/metadata",
             {headers: headers})))).then(
     response => {
       Promise.all([response[0].text()].concat(
@@ -55,11 +86,16 @@ Promise.all(
                 _loadWMTSOptions(wmtsCapabilities, "grb_bsk_grijs", "BPL72VL"),
                 0);
 
-            var layers = [layer1].concat(json.map((j, i) =>
-                _createImageLayer(j, i+1, images[i])
+            let imagesWithMetadata = json.map((j, i) => {return {extent: j.extent, image: images[i]};});
+            imagesWithMetadata = imagesWithMetadata.sort((a,b) => {
+              return areaCompareExtent(a.extent, b.extent);
+            })
+
+            layers = [layer1].concat(imagesWithMetadata.map((im,i) =>
+                _createImageLayer(im, i + 1)
             ))
 
-            var map = new Map({
+            map = new Map({
               layers: layers,
               target: 'map',
               view: view
@@ -73,17 +109,43 @@ function _createTileLayer(options, zIndex) {
     visible: true,
     source: new WMTS(options),
     zIndex: zIndex,
+    title: 'WMS'
   });
 }
 
-function _createImageLayer(options, zIndex, imageName) {
+function _createImageLayer(options, zIndex) {
+  let checkButtons = document.querySelector("#checkButtons");
+  let inputElement = document.createElement("input");
+  inputElement.setAttribute("type", "checkbox");
+  inputElement.setAttribute("id", options.image);
+  inputElement.setAttribute("name", options.image);
+  inputElement.setAttribute("value", options.image);
+  inputElement.setAttribute("checked", "");
+  inputElement.addEventListener("change",
+      (event) => {
+        layers.filter(
+            l => l.getProperties().title === event.target.value).forEach(
+            l => l.setVisible(!l.getVisible()));
+        map.getView().fit(
+            layers.filter(
+                l => l.getProperties().title
+                    === event.target.value)[0].getExtent(), map.getSize());
+      });
+  let labelElement = document.createElement("label");
+  labelElement.appendChild(document.createTextNode(options.image))
+  labelElement.setAttribute("for", options.image)
+  checkButtons.appendChild(
+      inputElement)
+  checkButtons.appendChild(labelElement);
   return new ImageLayer({
     visible: true,
     source: new Static({
-      url: '/geotiff/' + imageName,
+      url: '/geotiff/' + encodeURI(options.image),
       imageExtent: options.extent,
     }),
-    zIndex: zIndex,
+    extent: options.extent,
+    title: options.image,
+    zIndex: zIndex
   });
 }
 

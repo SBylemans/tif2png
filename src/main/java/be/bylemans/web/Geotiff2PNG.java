@@ -39,7 +39,7 @@ public class Geotiff2PNG {
     try (InputStream in = getClass().getResourceAsStream(
         "/images/" + imageName + ".tif"); ServletOutputStream outputStream = response
         .getOutputStream()) {
-      convertToWhiteTransparentPng(in, outputStream);
+      convertToWhiteTransparentPng(imageName, in, outputStream);
     }
   }
 
@@ -55,7 +55,9 @@ public class Geotiff2PNG {
     return stringObjectMap;
   }
 
-  void convertToWhiteTransparentPng(InputStream inputStream, OutputStream outputStream) throws IOException {
+  void convertToWhiteTransparentPng(String imageName, InputStream inputStream,
+      OutputStream outputStream)
+      throws IOException {
 //    Alternative method (not working for all tif's)
 //    GeoTiffReader reader = new GeoTiffReader(inputStream);
 //    ParameterValue<Color> input = AbstractGridFormat.INPUT_TRANSPARENT_COLOR.createValue();
@@ -90,6 +92,24 @@ public class Geotiff2PNG {
         }
       }
     }
+//    File compressedImageFile = new File("compressed_image_" + imageName + ".jpg");
+//    OutputStream os = new FileOutputStream(compressedImageFile);
+//
+//    Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+//    ImageWriter writer = (ImageWriter) writers.next();
+//
+//    ImageOutputStream ios = ImageIO.createImageOutputStream(os);
+//    writer.setOutput(ios);
+//
+//    ImageWriteParam param = writer.getDefaultWriteParam();
+//
+//    param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+//    param.setCompressionQuality(0.05f);  // Change the quality value you prefer
+//    writer.write(null, new IIOImage(image, null, null), param);
+//
+//    os.close();
+//    ios.close();
+//    writer.dispose();
 
     ImageIO.write(newImage, "PNG", outputStream);
   }
