@@ -34,18 +34,57 @@ var parser = new WMTSCapabilities();
 var wmtsUrl = "http://tile.informatievlaanderen.be/ws/raadpleegdiensten/wmts";
 
 var images = [
-  "test",
-  "test2",
-  "wilsele_noord",
-  "kriekenbos",
-  "l18_mechelsevest",
-  "mechelsevest",
-  "putkapel",
-  "st-jacobswijk",
-  "stationsoverkapping", "geertrui",
-  "h9_kriekenbos",
-  "koningin_astridlaan",
-  "kauter"]
+   "33495911-8c52-407c-bcfb-d081501903ea",
+  "9e7c620c-799e-4753-a8ab-56a49ae8f607",
+  "b074a056-8acc-41d3-a6b0-72501863c38e",
+  "5ea4b416-bfe3-492b-b6c0-a8fc1039f38d",
+  // "14374eba-af0c-4fbe-9d51-a178a3a88fec", // grootste
+  // "3bc3f262-513e-4bc0-b162-ed081d4cb348", // not found
+  // "dfdafb8e-b4d3-402b-ba5a-ddf83fbd3f48",
+  // "501cc5ac-2815-44f7-9ad8-c8ff3103a9fe",
+  // "92301e9f-d5bb-4244-8da4-bcc13ed46fc9",
+  // "bbdbe0ef-e186-4340-b95e-4d22d5f4a5ab",
+  // "b0eb0168-66e4-4099-b5b4-5cae9536a707",
+  // "ccda8c14-490e-4dd1-b137-7f16554848c7",
+  // "2f1345f0-7d4a-4cb1-8a49-87e619b6ccad",
+  // "3feb0b99-a58b-43e5-944b-53fdaf492750",
+  // "868ca187-0d87-4073-9e58-80471a222525",
+  // "2b3632eb-68b5-4140-b0cd-6fb7fd52102d",
+  // "14f5dab5-5f05-43fe-a52e-45f7f645794e",
+  // "b01627a5-002e-4857-9382-bd1d27379645",
+  // "118dd21e-dfe3-4b04-b098-5a1a9513c833",
+  // "5a4579d7-0741-4ef5-acad-0136f6427b36",
+  // "8ee82a6b-5327-4098-9af6-3b6aec53cba1",
+  // "9821672a-0c16-482c-9513-29151cc0fb97",
+  // "fffc88f3-44b0-431c-9b51-683910fc84f9",
+  // "81a5333f-27c7-4e10-a337-c82d99f6bf6b",
+  // "f1ac6ad6-0a31-4b24-8451-9ef764682632",
+  // "94c62b15-6b98-4e1c-81c3-93107aa446f1",
+  // "8965beb3-09fb-4138-bf86-17e0f30a88a5",
+  // "0c8720e5-5541-40bb-b4b8-258df21d3279",
+  // "f53e9e41-f980-43b9-bec8-6625f54d80e8",
+  // "65dced48-2a75-4168-b031-f7ce80267f12",
+  // "b16084b3-fe4d-4fca-9b63-67e23d52cdf6",
+  // "46bc8452-878a-4586-b834-b0f09fb6b66b",
+  // "c3730895-442f-4d22-8d17-c8141cf21efd",
+  // "440b400c-62e6-4273-b475-7886021c23b0",
+  // "cddb9289-26c1-405e-8bb8-09ff430ade9d",
+  // "23794880-6232-4c43-8cbc-7dca7e0efb2e",
+  // "6716201e-b466-4033-aeed-ebea50325229",
+  // "397d52f5-e25b-4178-a809-c31bf8ce1b1b",
+  // "a0c3841a-f7d1-40b3-8ac6-5766be398250",
+  // "0b04e560-20d3-4630-b063-b5bb27613755",
+  // "71d5fa11-4fe5-4da7-a94d-cb7c26e5f1ad",
+  // "ab50041c-4840-4527-8ac8-3515f0070091",
+  // "b0f18117-be0e-4b0b-ab81-105bf16012c7",
+  "ce7b364d-96cb-41ca-b99d-790f5bba75bc",
+  // "08d17d3a-8f84-40c5-81e9-8a1b5aa88c33",
+  // "051fc5da-3b8c-45a0-8203-31bb6c913d9b",
+  // "82fa58ca-5c8e-4a3d-a09b-a7fa4b6c73d3",
+  // "44d11b65-9536-4785-b271-b05c2127a387",
+  // "117ca31d-7bef-48fa-991f-8e241f7d4251",
+  // "f527da63-f178-4c35-9098-193636b4e824",
+]
 var headers = {
   'Accept': 'application/json',       // receive json
   'Content-Type': 'application/json'  // send json
@@ -72,12 +111,17 @@ function areaCompareExtent(a, b) {
 Promise.all(
     [fetch(wmtsUrl
         + "?request=getcapabilities&service=wmts&version=1.0.0")].concat(
-        images.map(imageName => fetch("/geotiff/" + encodeURI(imageName) + "/metadata",
-            {headers: headers})))).then(
+        images.map(
+            imageName => fetch(
+                "http://dsi-ontwikkel.omgeving.vlaanderen.be/api/fiches/stukken/"
+                + encodeURI(imageName) + "/extent",
+                {headers: headers})))).then(
     response => {
       Promise.all([response[0].text()].concat(
           response.slice(1).map(jsonResponse => jsonResponse.json()))).then(
           textAndJson => {
+
+            console.dir(textAndJson);
             var text = textAndJson[0];
             var json = textAndJson.slice(1);
             wmtsCapabilities = parser.read(text);
@@ -86,12 +130,14 @@ Promise.all(
                 _loadWMTSOptions(wmtsCapabilities, "grb_bsk_grijs", "BPL72VL"),
                 0);
 
-            let imagesWithMetadata = json.map((j, i) => {return {extent: j.extent, image: images[i]};});
-            imagesWithMetadata = imagesWithMetadata.sort((a,b) => {
+            let imagesWithMetadata = json.map((j, i) => {
+              return {extent: [j.minX, j.minY, j.maxX, j.maxY], image: images[i]};
+            });
+            imagesWithMetadata = imagesWithMetadata.sort((a, b) => {
               return areaCompareExtent(a.extent, b.extent);
             })
 
-            layers = [layer1].concat(imagesWithMetadata.map((im,i) =>
+            layers = [layer1].concat(imagesWithMetadata.map((im, i) =>
                 _createImageLayer(im, i + 1)
             ))
 
@@ -128,19 +174,18 @@ function _createImageLayer(options, zIndex) {
             l => l.setVisible(!l.getVisible()));
         map.getView().fit(
             layers.filter(
-                l => l.getProperties().title
-                    === event.target.value)[0].getExtent(), map.getSize());
+                l => l.getProperties().title === event.target.value)[0].getExtent(), map.getSize());
       });
   let labelElement = document.createElement("label");
   labelElement.appendChild(document.createTextNode(options.image))
   labelElement.setAttribute("for", options.image)
-  checkButtons.appendChild(
-      inputElement)
+  checkButtons.appendChild(inputElement)
   checkButtons.appendChild(labelElement);
   return new ImageLayer({
     visible: true,
     source: new Static({
-      url: '/geotiff/' + encodeURI(options.image),
+      url: 'http://dsi-ontwikkel.omgeving.vlaanderen.be/api/fiches/stukken/'
+          + encodeURI(options.image) + '/png',
       imageExtent: options.extent,
     }),
     extent: options.extent,
@@ -172,4 +217,3 @@ function _createResolutions(bbox) {
       (elementValue, elementIndex) => MAX_RESOLUTION / Math.pow(2,
           elementIndex));
 }
-
